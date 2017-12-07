@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define DEBUGGING 1 // Set to or as appropriate
+#define DEBUGGING 0 // Set to 0 or 1 as appropriate
 #define KEY 420
 
 int create_sem(char *arg) {
@@ -32,16 +32,21 @@ int create_sem(char *arg) {
 void view_sem() {
   int s = semget(KEY, 1, IPC_CREAT);
   printf("current value: %d\n", semctl(s, 0, GETVAL));
-  printf("%s\n", strerror(errno));
+  if (DEBUGGING) printf("ERROR:%s\n", strerror(errno));
 }
 
 void remove_sem() {
   int s = semget(KEY, 1, IPC_CREAT);
-  semctl(s, 0, IPC_RMID);
-  printf("Removed semaphore");
+  if (semctl(s, 0, IPC_RMID) != -1)
+    printf("Removed semaphore\n");
+  else if (DEBUGGING)
+    printf("ERROR:%s\n", strerror(errno));
 }
 
 int main(int argc, char* argv[]) {
+  if (argc < 2)
+    return 0;
+
   if (!strcmp(argv[1], "-c") && argc == 3 && argv[2]){ //first arg is -c, there is a second arg, and second arg is not null
     printf("creating...\n");
     create_sem(argv[2]);
